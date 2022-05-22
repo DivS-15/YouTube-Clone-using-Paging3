@@ -3,9 +3,11 @@
   <component name="DesignSurface">
     <option name="filePathToZoomLevelMap">
       <map>
+        <entry key="..\:/YouTubeClonePaging/app/src/main/res/drawable/retry_button_background.xml" value="0.2375" />
         <entry key="..\:/YouTubeClonePaging/app/src/main/res/layout/activity_main.xml" value="0.22826086956521738" />
         <entry key="..\:/YouTubeClonePaging/app/src/main/res/layout/fragment_popular_videos_list.xml" value="0.2" />
-        <entry key="..\:/YouTubeClonePaging/app/src/main/res/layout/video_list_item.xml" value="0.22826086956521738" />
+        <entry key="..\:/YouTubeClonePaging/app/src/main/res/layout/loadstate_viewholder_layout.xml" value="0.22826086956521738" />
+        <entry key="..\:/YouTubeClonePaging/app/src/main/res/layout/video_list_item.xml" value="0.4" />
       </map>
     </option>
   </component>

@@ -2,15 +2,16 @@ package com.divyansh.clone.youtube.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.paging.Pager
-import androidx.paging.PagingConfig
-import androidx.paging.PagingData
-import androidx.paging.cachedIn
+import androidx.paging.*
 import com.divyansh.clone.youtube.data.model.video.Item
 import com.divyansh.clone.youtube.data.paging.VideosPagingSource
 import com.divyansh.clone.youtube.data.repository.VideoRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.conflate
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -18,21 +19,27 @@ import javax.inject.Inject
 class VideoViewModel @Inject constructor(
     private val repository: VideoRepository
 ) : ViewModel() {
-    private lateinit var channelUrl: String
 
-    val items: Flow<PagingData<Item>> = Pager(
+    val items: Flow<PagingData<VideoWithChannelModel>> = Pager(
         PagingConfig(10, enablePlaceholders = false),
         pagingSourceFactory = { repository.videosPagingSource() }
-    ).flow.cachedIn(viewModelScope)
-
-    suspend fun onChannelImgRequired(channelId: String?): String {
-        viewModelScope.launch {
-            channelId?.let {
-                channelUrl = repository.loadChannelThumbnail(channelId)
+    ).flow
+        .map { value: PagingData<Item> -> //map function from kotlinx.coroutines.flow
+            value.map {
+                val channelUrl = onChannelImgRequired(it.snippet.channelId.toString())
+                VideoWithChannelModel(it, channelUrl)
             }
-
         }
-        return channelUrl
+        .cachedIn(viewModelScope)
+
+
+    private suspend fun onChannelImgRequired(channelId: String): String {
+        return repository.loadChannelThumbnail(channelId)
     }
 
 }
+
+data class VideoWithChannelModel(
+    val item: Item,
+    val channelUrl: String
+)

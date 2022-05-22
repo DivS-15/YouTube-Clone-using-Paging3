@@ -23,7 +23,7 @@ interface VideosRemoteInterface {
         @Query("key") key: String = KEY
     ): PopularVideos
 
-    @GET("/channels")
+    @GET("channels")
     suspend fun getChannelDetails(
         @Query("id") channelId: String,
         @Query("part") part: String = "snippet",

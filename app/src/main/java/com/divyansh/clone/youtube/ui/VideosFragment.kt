@@ -9,15 +9,12 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.paging.LoadState
-import androidx.recyclerview.widget.LinearLayoutManager
 import com.divyansh.clone.youtube.R
 import com.divyansh.clone.youtube.databinding.FragmentPopularVideosListBinding
-import com.divyansh.clone.youtube.ui.recyclerview.DisplayChannelImage
+import com.divyansh.clone.youtube.ui.pagingloadstates.VideoLoadStateAdapter
 import com.divyansh.clone.youtube.ui.recyclerview.VideoAdapter
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
@@ -25,8 +22,6 @@ class VideosFragment : Fragment(R.layout.fragment_popular_videos_list) {
     private lateinit var _binding: FragmentPopularVideosListBinding
     private val binding get() = _binding
 
-    private val channelImageToAdapter = Channel<ChannelToAdapterClass>()
-    val passToAdapterFlow = channelImageToAdapter.receiveAsFlow()
 
     private val viewModel: VideoViewModel by viewModels()
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -34,13 +29,17 @@ class VideosFragment : Fragment(R.layout.fragment_popular_videos_list) {
 
         _binding = FragmentPopularVideosListBinding.bind(view)
 
-        val adapter = VideoAdapter(viewLifecycleOwner.lifecycleScope)
+        val adapter = VideoAdapter()
         binding.apply {
-            videosList.adapter = adapter
+            videosList.adapter = adapter.withLoadStateFooter(
+                footer = VideoLoadStateAdapter{adapter.retry()}
+            )
         }
 
-        adapter.addLoadStateListener {
-            binding.progressBar.isVisible = it.source.refresh is LoadState.Loading
+        viewLifecycleOwner.lifecycleScope.launch {
+            adapter.loadStateFlow.collectLatest {
+                binding.progressBar.isVisible = it.source.append is LoadState.Loading
+            }
         }
 
         viewLifecycleOwner.lifecycleScope.launch {
@@ -51,24 +50,5 @@ class VideosFragment : Fragment(R.layout.fragment_popular_videos_list) {
             }
         }
 
-        viewLifecycleOwner.lifecycleScope.launch {
-            adapter.displayChannelFlow.collectLatest {
-                when (it) {
-                    is DisplayChannelImage.ChannelThumbnailImage -> {
-                        val channelImgUrl =
-                            viewModel.onChannelImgRequired(it.video.snippet.channelId)
-                        channelImageToAdapter.send(
-                            ChannelToAdapterClass.PassDataToAdapter(
-                                channelImgUrl
-                            )
-                        )
-                    }
-                }
-            }
-        }
     }
-}
-
-sealed class ChannelToAdapterClass {
-    data class PassDataToAdapter(val channelIdToAdapter: String) : ChannelToAdapterClass()
 }

@@ -1,5 +1,6 @@
 package com.divyansh.clone.youtube.ui.recyclerview
 
+import android.annotation.SuppressLint
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.core.net.toUri
@@ -7,69 +8,67 @@ import androidx.paging.PagingDataAdapter
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import coil.load
-import com.divyansh.clone.youtube.data.model.video.Item
+import coil.transform.CircleCropTransformation
 import com.divyansh.clone.youtube.databinding.VideoListItemBinding
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.flow.receiveAsFlow
-import kotlinx.coroutines.launch
-import javax.inject.Inject
+import com.divyansh.clone.youtube.ui.VideoWithChannelModel
+import com.divyansh.clone.youtube.utilities.getDateTimeDifference
 
-class VideoAdapter @Inject constructor(
-    private val coroutineScope: CoroutineScope
-) : PagingDataAdapter<Item, VideoAdapter.VideoViewHolder>(DiffCallback) {
+class VideoAdapter :
+    PagingDataAdapter<VideoWithChannelModel, VideoAdapter.VideoViewHolder>(DiffCallback) {
 
-    private val displayBannerChannel = Channel<DisplayChannelImage>()
-    val displayChannelFlow = displayBannerChannel.receiveAsFlow()
-
-    companion object DiffCallback : DiffUtil.ItemCallback<Item>() {
-        override fun areItemsTheSame(oldItem: Item, newItem: Item): Boolean {
-            return oldItem.id == newItem.id
+    companion object DiffCallback : DiffUtil.ItemCallback<VideoWithChannelModel>() {
+        override fun areItemsTheSame(
+            oldItem: VideoWithChannelModel,
+            newItem: VideoWithChannelModel
+        ): Boolean {
+            return oldItem.item.id == newItem.item.id
         }
 
-        override fun areContentsTheSame(oldItem: Item, newItem: Item): Boolean {
+        override fun areContentsTheSame(
+            oldItem: VideoWithChannelModel,
+            newItem: VideoWithChannelModel
+        ): Boolean {
             return oldItem == newItem
         }
-
     }
 
     inner class VideoViewHolder(
         private val binding: VideoListItemBinding
     ) : RecyclerView.ViewHolder(binding.root) {
 
-        init {
-            if(absoluteAdapterPosition != -1){
-                val currentVideoItem = getItem(absoluteAdapterPosition)
-                coroutineScope.launch {
-                    currentVideoItem?.let {
-                        displayBannerChannel.send(
-                            DisplayChannelImage.ChannelThumbnailImage(
-                                currentVideoItem
-                            )
-                        )
-                    }
-                }
-                coroutineScope.launch {
-
-                }
-            }
-        }
-
-        fun bind(video: Item) {
+        @SuppressLint("SetTextI18n")
+        fun bind(video: VideoWithChannelModel) {
             binding.apply {
-                videoTitle.text = video.snippet.title
-                channelTitle.text = video.snippet.channelTitle
-                viewCount.text = video.statistics.viewCount
-
-                val imgUrl = video.snippet.thumbnails?.high?.url
-
-                val imgUri = imgUrl?.let {
-                    it.toUri().buildUpon().scheme("https").build()
-                }
+                        val imgUrl = video.channelUrl.toUri().buildUpon().scheme("https").build()
+                        channelThumbnailImage.load(imgUrl) {
+                            transformations(CircleCropTransformation())
+                        }
 
 
+                        video.item.apply {
+                            videoTitle.text = this.snippet.title
+                            channelTitle.text = snippet.channelTitle
+                            viewCount.text = statistics.viewCount
 
-                videoThumbnailImage.load(imgUri)
+                            val imgUrl = snippet.thumbnails?.high?.url
+
+                            val dateTime = getDateTimeDifference(snippet.publishedAt.toString())
+
+                            if (dateTime.days.toInt() != 0) {
+                                timePublished.text = "${dateTime.days.toInt()} days ago"
+                            } else if (dateTime.days.toInt() == 0) {
+                                timePublished.text = "${dateTime.hours.toInt()} hours ago"
+                            }
+                            if (dateTime.hours.toInt() == 0) {
+                                timePublished.text = "${dateTime.minutes.toInt()} minutes ago"
+                            }
+
+
+                            val imgUri = imgUrl?.toUri()?.buildUpon()?.scheme("https")?.build()
+
+                            videoThumbnailImage.load(imgUri)
+
+                        }
             }
         }
     }
@@ -77,7 +76,7 @@ class VideoAdapter @Inject constructor(
     override fun onBindViewHolder(holder: VideoViewHolder, position: Int) {
         val currentItem = getItem(position)
         currentItem?.let {
-            holder.bind(currentItem)
+            holder.bind(it)
         }
     }
 
@@ -86,8 +85,4 @@ class VideoAdapter @Inject constructor(
             VideoListItemBinding.inflate(LayoutInflater.from(parent.context), parent, false)
         return VideoViewHolder(binding)
     }
-}
-
-sealed class DisplayChannelImage {
-    data class ChannelThumbnailImage(val video: Item) : DisplayChannelImage()
 }

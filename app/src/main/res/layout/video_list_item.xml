@@ -9,7 +9,7 @@
     <ImageView
         android:id="@+id/video_thumbnail_image"
         android:layout_width="match_parent"
-        android:layout_height="200dp"
+        android:layout_height="215dp"
         android:contentDescription="@string/video_thumbnail"
         android:scaleType="centerCrop"
         app:layout_constraintStart_toStartOf="parent"
@@ -25,10 +25,11 @@
 
         <ImageView
             android:id="@+id/channel_thumbnail_image"
-            android:layout_width="50dp"
-            android:layout_height="50dp"
-            android:layout_marginStart="5dp"
+            android:layout_width="45dp"
+            android:layout_height="45dp"
+            android:layout_marginStart="10dp"
             android:layout_marginTop="10dp"
+            android:layout_marginEnd="10dp"
             android:padding="5dp"
             android:scaleType="fitXY"
             tools:src="@tools:sample/backgrounds/scenic" />
@@ -67,10 +68,10 @@
                     tools:text="Technical Guruji" />
 
                 <ImageView
-                    android:layout_width="6dp"
-                    android:layout_height="6dp"
-                    android:layout_marginTop="15dp"
-                    android:layout_marginBottom="15dp"
+                    android:layout_width="4dp"
+                    android:layout_height="4dp"
+                    android:layout_marginTop="10dp"
+                    android:layout_marginBottom="25dp"
                     android:src="@drawable/ic_baseline_circle_24" />
 
                 <TextView
@@ -95,9 +96,9 @@
                     android:textSize="12sp" />
 
                 <ImageView
-                    android:layout_width="6dp"
-                    android:layout_height="6dp"
-                    android:layout_marginTop="15dp"
+                    android:layout_width="4dp"
+                    android:layout_height="4dp"
+                    android:layout_marginTop="10dp"
                     android:layout_marginBottom="15dp"
                     android:src="@drawable/ic_baseline_circle_24" />
 
